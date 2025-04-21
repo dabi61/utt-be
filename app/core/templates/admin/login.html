@@ -1,0 +1,293 @@
+{% extends 'admin/login.html' %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    :root {
+        --primary-color: #FF7F00;
+        --secondary-color: #1A2C56;
+        --light-color: #f8f9fa;
+        --dark-color: #343a40;
+        --accent-light: #FFF3E0;
+        --accent-dark: #233B78;
+    }
+
+    body {
+        background: linear-gradient(135deg, rgba(26, 44, 86, 0.95) 0%, rgba(42, 72, 135, 0.9) 100%);
+        background-size: cover;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: url('{% static "admin/img/background.jpg" %}') no-repeat center center fixed;
+        background-size: cover;
+        opacity: 0.2;
+    }
+    
+    .login-box {
+        width: 420px;
+        max-width: 90%;
+        margin: 0 auto;
+    }
+    
+    .login-logo {
+        padding: 15px 0;
+        text-align: center;
+        margin-bottom: 0;
+    }
+    
+    .login-logo a {
+        font-size: 2.5rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-dark) 100%);
+        color: white;
+        text-align: center;
+        padding: 25px 20px;
+        border-bottom: none;
+        position: relative;
+    }
+    
+    .card-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--primary-color);
+    }
+    
+    .card-header h3 {
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .card-body {
+        padding: 30px;
+        background: white;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .form-control {
+        height: 50px;
+        border-radius: 10px;
+        border: 1px solid #e1e1e1;
+        padding-left: 45px;
+        transition: all 0.3s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(255,127,0,0.25);
+    }
+    
+    .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 15px;
+        color: #b0b0b0;
+        transition: all 0.3s;
+        z-index: 2;
+    }
+    
+    .form-control:focus + .input-icon {
+        color: var(--primary-color);
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        height: 50px;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background-color: #E57200;
+        border-color: #E57200;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(255,127,0,0.3);
+    }
+    
+    .login-box-links {
+        text-align: center;
+        margin-top: 25px;
+    }
+    
+    .login-box-links a {
+        color: var(--primary-color);
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .login-box-links a:hover {
+        color: #E57200;
+        text-decoration: none;
+    }
+    
+    .login-box-separator {
+        display: block;
+        width: 100%;
+        height: 1px;
+        background: #e1e1e1;
+        margin: 20px 0;
+        position: relative;
+    }
+    
+    .login-box-separator span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 0 10px;
+        background: white;
+        color: #b0b0b0;
+    }
+
+    .school-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: white;
+        border-radius: 50%;
+        padding: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+    }
+    
+    .school-badge img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    
+    .form-check-input {
+        margin-top: 0.3rem;
+    }
+    
+    .form-check-label {
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .submit-row {
+        margin-top: 25px;
+    }
+    
+    .errornote {
+        background-color: #FDEDED;
+        border: 1px solid #F4BFBF;
+        color: #8B0000;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="login-box">
+    <div class="login-logo">
+        <a href="{% url 'admin:index' %}">
+            <span style="color:#FFF;"><span style="color:#FF7F00;font-weight:600;">UTT</span> <span style="color:#233B78;font-weight:600;">School</span></span>
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>{% trans 'Đăng nhập' %}</h3>
+        </div>
+        
+        <div class="card-body">
+            <form action="{{ app_path }}" method="post" id="login-form">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <p class="errornote">
+                    {% if form.errors.items|length == 1 %}
+                    {% trans "Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại." %}
+                    {% else %}
+                    {% trans "Vui lòng sửa các lỗi dưới đây." %}
+                    {% endif %}
+                </p>
+                {% endif %}
+                
+                <div class="form-group">
+                    <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" class="form-control" placeholder="{% trans 'Email hoặc tên đăng nhập' %}" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" name="password" autocomplete="current-password" class="form-control" placeholder="{% trans 'Mật khẩu' %}" required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+                
+                {% if form.errors %}
+                    {% for error in form.non_field_errors %}
+                        <p class="errornote">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="form-check">
+                    <input type="checkbox" name="remember" id="id_remember" class="form-check-input">
+                    <label for="id_remember" class="form-check-label">{% trans 'Ghi nhớ đăng nhập' %}</label>
+                </div>
+                
+                <input type="hidden" name="next" value="{{ next }}">
+                
+                <div class="submit-row">
+                    <button type="submit" class="btn btn-primary">{% trans 'Đăng nhập' %}</button>
+                </div>
+                
+                <div class="login-box-links">
+                    {% url 'admin_password_reset' as password_reset_url %}
+                    {% if password_reset_url %}
+                    <a href="{{ password_reset_url }}">{% trans 'Quên mật khẩu?' %}</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block bootstrap_script %}
+{{ block.super }}
+{% endblock %} 

@@ -1,0 +1,243 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+<style>
+    /* Các tùy chỉnh CSS bổ sung */
+    :root {
+        --primary-color: #FF7F00;
+        --secondary-color: #1A2C56;
+        --light-color: #f8f9fa;
+        --dark-color: #343a40;
+        --accent-light: #FFF3E0;
+        --accent-dark: #233B78;
+    }
+    
+    /* Tùy chỉnh header và brand */
+    .main-header .navbar-brand {
+        padding: 10px 0;
+    }
+    
+    /* Thêm animation cho các phần tử */
+    .card, .info-box, .btn, .form-control {
+        transition: all 0.3s ease;
+    }
+    
+    /* Hiệu ứng khi hover trên card */
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Định dạng các nút chức năng */
+    .object-tools .btn {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .object-tools .btn:hover {
+        background-color: #E57200;
+        border-color: #E57200;
+    }
+    
+    /* Tùy chỉnh giao diện trang danh sách */
+    .results {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Tiêu đề trang */
+    .content-header h1 {
+        font-weight: 600;
+        color: var(--secondary-color);
+    }
+    
+    /* Breadcrumb tùy chỉnh */
+    .breadcrumb {
+        padding: 10px 15px;
+        border-radius: 8px;
+    }
+    
+    /* Tùy chỉnh filter sidebar */
+    .card-outline {
+        border-top: 3px solid var(--primary-color) !important;
+    }
+    
+    /* Đường viền cho bảng */
+    .table-bordered {
+        border: none;
+    }
+    
+    .table-bordered th, .table-bordered td {
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    /* Tooltip hiển thị thông tin */
+    [data-toggle="tooltip"] {
+        cursor: pointer;
+    }
+    
+    /* Badge tùy chỉnh */
+    .badge {
+        padding: 6px 10px;
+        border-radius: 50px;
+    }
+    
+    /* Màu badge tùy chỉnh */
+    .badge-success {
+        background-color: #28a745;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .badge-danger {
+        background-color: #dc3545;
+    }
+    
+    /* Dropdown menu tùy chỉnh */
+    .dropdown-menu {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: none;
+        border-radius: 8px;
+    }
+    
+    .dropdown-item:hover {
+        background-color: var(--accent-light);
+    }
+    
+    /* Tùy chỉnh popup/modal */
+    .modal-content {
+        border-radius: 10px;
+        overflow: hidden;
+        border: none;
+    }
+    
+    .modal-header {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+    
+    /* Thanh tìm kiếm */
+    .search-form .form-control {
+        border-radius: 50px;
+        padding-left: 40px;
+    }
+    
+    .search-form .fa-search {
+        position: absolute;
+        left: 15px;
+        top: 12px;
+        color: #aaa;
+    }
+    
+    /* Nút trang chính */
+    .home-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: var(--primary-color);
+        transition: all 0.3s;
+    }
+    
+    .home-link:hover {
+        color: #E57200;
+        text-decoration: none;
+        transform: translateX(5px);
+    }
+    
+    /* Tùy chỉnh các trạng thái dữ liệu */
+    .status-true {
+        color: #28a745;
+    }
+    
+    .status-false {
+        color: #dc3545;
+    }
+    
+    /* Tùy chỉnh liên kết dưới chân trang */
+    .footer-links a {
+        color: var(--primary-color);
+        margin: 0 10px;
+    }
+    
+    /* Tùy chỉnh scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #E57200;
+    }
+    
+    /* Bổ sung các tùy chỉnh responsive */
+    @media (max-width: 768px) {
+        .content-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    {% if site_header %}
+        {{ site_header|safe }}
+    {% else %}
+        <span style="font-weight:600;"><span style="color:#FF7F00;">UTT</span> <span style="color:#1A2C56;">School</span></span>
+    {% endif %}
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block welcome-msg %}
+    <strong>{% translate 'Xin chào,' %}</strong> {% firstof user.get_short_name user.get_username %}.
+{% endblock %}
+
+{% block userlinks %}
+    {% if site_url %}
+        <a href="{{ site_url }}" class="dropdown-item">
+            <i class="fas fa-home mr-2"></i> {% translate 'Trang chủ' %}
+        </a>
+    {% endif %}
+    {% if user.has_usable_password %}
+    <div class="dropdown-divider"></div>
+    <a href="{% url 'admin:password_change' %}" class="dropdown-item">
+        <i class="fas fa-key mr-2"></i> {% translate 'Đổi mật khẩu' %}
+    </a>
+    {% endif %}
+    <div class="dropdown-divider"></div>
+    <a href="{% url 'admin:logout' %}" class="dropdown-item">
+        <i class="fas fa-sign-out-alt mr-2"></i> {% translate 'Đăng xuất' %}
+    </a>
+    {% if user.is_active and user.is_staff %}
+        {% url 'django-admindocs-docroot' as docsroot %}
+        {% if docsroot %}
+        <div class="dropdown-divider"></div>
+        <a href="{{ docsroot }}" class="dropdown-item">
+            <i class="fas fa-book mr-2"></i> {% translate 'Tài liệu' %}
+        </a>
+        {% endif %}
+    {% endif %}
+{% endblock %} 

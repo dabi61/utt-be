@@ -1,0 +1,300 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Sinh viên UTT') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+<style>
+    /* Các biến màu sắc */
+    :root {
+        --primary-color: #FF7F00;
+        --secondary-color: #1A2C56;
+        --light-color: #f8f9fa;
+        --dark-color: #343a40;
+        --accent-light: #FFF3E0;
+        --accent-dark: #233B78;
+    }
+    
+    /* Tùy chỉnh header */
+    .main-header .navbar-brand {
+        padding: 10px 0;
+    }
+    
+    /* Gradient cho header và sidebar */
+    .navbar {
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-dark) 100%) !important;
+        border-bottom: 3px solid var(--primary-color) !important;
+    }
+    
+    .main-sidebar {
+        background: linear-gradient(180deg, var(--secondary-color) 0%, var(--accent-dark) 100%) !important;
+    }
+    
+    .main-sidebar .brand-link {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Hiệu ứng hover cho các phần tử điều hướng */
+    .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+        background-color: var(--primary-color) !important;
+        color: #fff !important;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link:hover {
+        background-color: rgba(255, 127, 0, 0.2) !important;
+    }
+    
+    /* Tùy chỉnh breadcrumb */
+    .breadcrumb {
+        background-color: rgba(255, 127, 0, 0.1) !important;
+        border-radius: 10px !important;
+        padding: 10px 15px !important;
+    }
+    
+    .breadcrumb-item.active {
+        color: var(--primary-color) !important;
+    }
+    
+    /* Tùy chỉnh các card */
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        background-color: #fff;
+        border-bottom: 2px solid var(--accent-light);
+        padding: 15px 20px;
+    }
+    
+    .card-title {
+        color: var(--secondary-color);
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    /* Thông báo */
+    .alert {
+        border-radius: 10px;
+        border: none;
+        padding: 15px 20px;
+    }
+    
+    /* Nút */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+        background-color: #E57200;
+        border-color: #E57200;
+    }
+    
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    /* Badge */
+    .badge-primary {
+        background-color: var(--primary-color);
+    }
+    
+    .badge-secondary {
+        background-color: var(--secondary-color);
+    }
+    
+    /* Table styling */
+    .table thead th {
+        background-color: var(--secondary-color);
+        color: white;
+        border-bottom: none;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: var(--accent-light);
+    }
+    
+    /* Tùy chỉnh biểu mẫu */
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(255, 127, 0, 0.25);
+    }
+    
+    /* Tùy chỉnh hình ảnh đại diện */
+    .user-panel img {
+        border: 2px solid var(--primary-color);
+    }
+    
+    /* Tùy chỉnh footer */
+    .main-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #eaeaea;
+        color: #6c757d;
+        padding: 15px;
+    }
+    
+    /* Dashboard cho sinh viên */
+    .student-dashboard-info {
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-dark) 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .student-dashboard-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 150px;
+        height: 150px;
+        background: var(--primary-color);
+        opacity: 0.1;
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+        z-index: 0;
+    }
+    
+    .student-dashboard-info h2 {
+        position: relative;
+        z-index: 1;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .student-dashboard-info p {
+        position: relative;
+        z-index: 1;
+        opacity: 0.9;
+    }
+    
+    /* InfoBox tùy chỉnh */
+    .info-box {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+    
+    .info-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* Status badge */
+    .status-present {
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    
+    .status-absent {
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    
+    .status-late {
+        background-color: #ffc107;
+        color: #343a40;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    
+    /* Scrollbar tùy chỉnh */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #E57200;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .content-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .content-wrapper {
+            padding-top: 10px;
+        }
+        
+        .student-dashboard-info {
+            padding: 20px;
+        }
+        
+        .student-dashboard-info h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    {% if site_header %}
+        {{ site_header|safe }}
+    {% else %}
+        <span style="font-weight:600;"><span style="color:#FF7F00;">UTT</span> <span style="color:#FFF;">School</span> | <span style="color:#FF7F00;">Sinh Viên</span></span>
+    {% endif %}
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block welcome-msg %}
+    <strong>{% translate 'Xin chào,' %}</strong> {% firstof user.get_short_name user.get_username %}.
+{% endblock %}
+
+{% block userlinks %}
+    {% if site_url %}
+        <a href="{{ site_url }}" class="dropdown-item">
+            <i class="fas fa-home mr-2"></i> {% translate 'Trang chủ' %}
+        </a>
+    {% endif %}
+    {% if user.has_usable_password %}
+    <div class="dropdown-divider"></div>
+    <a href="{% url 'admin:password_change' %}" class="dropdown-item">
+        <i class="fas fa-key mr-2"></i> {% translate 'Đổi mật khẩu' %}
+    </a>
+    {% endif %}
+    <div class="dropdown-divider"></div>
+    <a href="{% url 'admin:logout' %}" class="dropdown-item">
+        <i class="fas fa-sign-out-alt mr-2"></i> {% translate 'Đăng xuất' %}
+    </a>
+{% endblock %} 

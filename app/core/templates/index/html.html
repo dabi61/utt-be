@@ -1,0 +1,304 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTT School - Trang Thông Tin</title>
+    <style>
+        :root {
+            --primary-color: #FF7F00; /* Cam */
+            --secondary-color: #1A2C56; /* Xanh than */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--secondary-color);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom: 5px solid var(--primary-color);
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .logo-highlight {
+            color: var(--primary-color);
+        }
+        
+        .subtitle {
+            margin-top: 0.5rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .hero {
+            background: linear-gradient(rgba(26, 44, 86, 0.8), rgba(26, 44, 86, 0.9)), url('{% static "admin/img/background.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 5rem 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            font-size: 1rem;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #E57200;
+            border-color: #E57200;
+            box-shadow: 0 0 10px rgba(255, 127, 0, 0.5);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            margin-left: 1rem;
+        }
+        
+        .btn-secondary:hover {
+            background-color: white;
+            color: var(--secondary-color);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+        }
+        
+        .feature {
+            flex-basis: calc(33.333% - 2rem);
+            margin-bottom: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .feature:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2.5rem;
+        }
+        
+        .feature-icon.blue {
+            background-color: var(--secondary-color);
+        }
+        
+        .feature h3 {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+        
+        .feature p {
+            text-align: center;
+            color: #666;
+        }
+        
+        .cta {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            border-radius: 8px;
+            margin-bottom: 3rem;
+        }
+        
+        .cta h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        
+        .cta-btn {
+            background-color: white;
+            color: var(--primary-color);
+            border: none;
+            font-size: 1.1rem;
+        }
+        
+        .cta-btn:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .footer {
+            background-color: var(--secondary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            border-top: 5px solid var(--primary-color);
+        }
+        
+        .footer p {
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .features {
+                flex-direction: column;
+            }
+            
+            .feature {
+                flex-basis: 100%;
+            }
+            
+            .btn {
+                display: block;
+                margin: 1rem auto;
+                width: 80%;
+            }
+            
+            .btn-secondary {
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo"><span class="logo-highlight">UTT</span> School</div>
+            <p class="subtitle">Hệ thống Quản lý Đào tạo Trường Đại học Công nghệ Giao thông Vận tải</p>
+        </div>
+    </header>
+    
+    <section class="hero">
+        <h2>Nền tảng Đào tạo Hiện đại</h2>
+        <p>UTT School cung cấp một nền tảng quản lý đào tạo hiện đại, giúp sinh viên và giảng viên kết nối, tương tác và học tập hiệu quả.</p>
+        <a href="/" class="btn btn-primary">Trang Chủ</a>
+        <a href="/admin/" class="btn btn-secondary">Đăng Nhập</a>
+    </section>
+    
+    <div class="container">
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">
+                    <i>📚</i>
+                </div>
+                <h3>Quản lý Học tập</h3>
+                <p>Xem lịch học, thời khóa biểu và quản lý các môn học một cách dễ dàng với giao diện thân thiện.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon blue">
+                    <i>✓</i>
+                </div>
+                <h3>Điểm danh QR Code</h3>
+                <p>Hệ thống điểm danh thông minh sử dụng QR Code giúp quá trình điểm danh trở nên nhanh chóng và chính xác.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i>📊</i>
+                </div>
+                <h3>Báo cáo & Thống kê</h3>
+                <p>Xem báo cáo chi tiết về tình hình học tập, điểm danh và tiến độ học tập của sinh viên.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon blue">
+                    <i>👨‍🏫</i>
+                </div>
+                <h3>Quản lý Giảng viên</h3>
+                <p>Công cụ hiệu quả giúp giảng viên quản lý lớp học, tài liệu giảng dạy và theo dõi tiến độ của sinh viên.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i>📱</i>
+                </div>
+                <h3>Truy cập mọi lúc</h3>
+                <p>Truy cập hệ thống từ mọi thiết bị, mọi lúc, mọi nơi với giao diện tương thích đa nền tảng.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon blue">
+                    <i>🔒</i>
+                </div>
+                <h3>Bảo mật cao</h3>
+                <p>Hệ thống được bảo mật chặt chẽ, đảm bảo thông tin của sinh viên và giảng viên luôn được bảo vệ.</p>
+            </div>
+        </div>
+        
+        <div class="cta">
+            <h2>Bắt đầu sử dụng UTT School ngay hôm nay</h2>
+            <p>Hãy tham gia cùng chúng tôi để trải nghiệm một nền tảng quản lý đào tạo hiện đại, giúp quá trình học tập và giảng dạy trở nên hiệu quả hơn.</p>
+            <a href="/" class="btn cta-btn">Quay lại Trang Chủ</a>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <p>&copy; {% now "Y" %} UTT School - Hệ thống Quản lý Đào tạo Trường Đại học Công nghệ Giao thông Vận tải. Tất cả các quyền được bảo lưu.</p>
+    </footer>
+</body>
+</html> 

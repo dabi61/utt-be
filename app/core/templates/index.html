@@ -1,0 +1,298 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTT School - Hệ thống Quản lý Đào tạo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #FF7F00; /* Cam */
+            --secondary-color: #1A2C56; /* Xanh than */
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --accent-light: #FFF3E0;
+            --accent-dark: #233B78;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(26, 44, 86, 0.95) 0%, rgba(42, 72, 135, 0.9) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: url('{% static "admin/img/background.jpg" %}') no-repeat center center fixed;
+            background-size: cover;
+            opacity: 0.2;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 3.5rem;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 1px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .logo h1 .highlight-orange {
+            color: var(--primary-color);
+        }
+        
+        .logo h1 .highlight-blue {
+            color: var(--light-color);
+        }
+        
+        .logo p {
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .card {
+            width: 300px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .card-header {
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+        
+        .card-admin .card-header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-dark) 100%);
+            color: white;
+        }
+        
+        .card-admin .card-header::after {
+            background: var(--primary-color);
+        }
+        
+        .card-student .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #E57200 100%);
+            color: white;
+        }
+        
+        .card-student .card-header::after {
+            background: var(--secondary-color);
+        }
+        
+        .card-teacher .card-header {
+            background: linear-gradient(135deg, var(--accent-dark) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .card-teacher .card-header::after {
+            background: var(--primary-color);
+        }
+        
+        .card-header h2 {
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .card-admin .card-icon {
+            color: var(--secondary-color);
+        }
+        
+        .card-student .card-icon {
+            color: var(--primary-color);
+        }
+        
+        .card-teacher .card-icon {
+            color: var(--secondary-color);
+        }
+        
+        .card-description {
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #E57200;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255,127,0,0.3);
+        }
+        
+        .btn-secondary {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--secondary-color);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26,44,86,0.3);
+        }
+        
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .logo h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1><span class="highlight-orange">UTT</span> <span class="highlight-blue">School</span></h1>
+            <p>Hệ thống Quản lý Đào tạo Trường Đại học Công nghệ Giao thông Vận tải</p>
+        </div>
+        
+        <div class="cards-container">
+            <div class="card card-student">
+                <div class="card-header">
+                    <h2>Sinh viên</h2>
+                </div>
+                <div class="card-body">
+                    <div class="card-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <p class="card-description">
+                        Dành cho sinh viên. Xem thời khóa biểu, điểm danh học tập, theo dõi tiến độ học tập và kết quả học tập.
+                    </p>
+                    <a href="/student/login/" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card card-teacher">
+                <div class="card-header">
+                    <h2>Giảng viên</h2>
+                </div>
+                <div class="card-body">
+                    <div class="card-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <p class="card-description">
+                        Dành cho giảng viên. Quản lý lớp học, điểm danh sinh viên, cập nhật tài liệu và theo dõi hoạt động giảng dạy.
+                    </p>
+                    <a href="/admin/" class="btn-secondary">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card card-admin">
+                <div class="card-header">
+                    <h2>Quản trị viên</h2>
+                </div>
+                <div class="card-body">
+                    <div class="card-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <p class="card-description">
+                        Dành cho quản trị viên nhà trường. Quản lý dữ liệu, tài khoản, kế hoạch giảng dạy và hệ thống.
+                    </p>
+                    <a href="/admin/" class="btn-secondary">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {% now "Y" %} UTT School. Phát triển bởi Trường Đại học Công nghệ Giao thông Vận tải</p>
+        </div>
+    </div>
+</body>
+</html> 
