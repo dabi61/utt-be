@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-ip%c22t(mg&b97ce)u%0@llbt)m$u0fcev12l_yb8_cfwa*drn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["api.utt-school.site"]
 
 
 # Application definition
