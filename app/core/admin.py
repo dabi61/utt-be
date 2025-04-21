@@ -454,8 +454,8 @@ admin.site.register(QRCode)
 
 
 # Tạo group nếu chưa tồn tại
-for group_name in ['GiangVien', 'SinhVien']:
-    # Group.objects.get_or_create(name=group_name)
+# for group_name in ['GiangVien', 'SinhVien']:
+#     Group.objects.get_or_create(name=group_name)
 
 # Custom AdminSite cho Student
 class StudentAdminSite(AdminSite):
