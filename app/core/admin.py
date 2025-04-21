@@ -86,7 +86,7 @@ class UserAdminForm(forms.ModelForm):
 # Tùy chỉnh UserAdmin
 class UserAdmin(BaseUserAdmin):
     """Define the admin pages for users."""
-    actions = [set_as_giangvien, set_as_sinhvien]
+    # actions = [set_as_giangvien, set_as_sinhvien]
     ordering = ['id']  # Sắp xếp theo ID
     form = UserAdminForm  # Sử dụng form tùy chỉnh
     list_display = ['email', 'name', 'phone_number', 'role', 'is_active', 'date_joined']
