@@ -14,63 +14,63 @@ from django.utils.safestring import mark_safe
 from django.utils import timezone
 from django.contrib.admin.sites import AdminSite
 
-def set_as_giangvien(modeladmin, request, queryset):
-    group_gv, _ = Group.objects.get_or_create(name='GiangVien')
-    group_sv = Group.objects.filter(name='SinhVien').first()
+# def set_as_giangvien(modeladmin, request, queryset):
+#     group_gv, _ = Group.objects.get_or_create(name='GiangVien')
+#     group_sv = Group.objects.filter(name='SinhVien').first()
 
-    for user in queryset:
-        # Xoá khỏi nhóm Sinh viên nếu có
-        if group_sv and group_sv in user.groups.all():
-            user.groups.remove(group_sv)
+#     for user in queryset:
+#         # Xoá khỏi nhóm Sinh viên nếu có
+#         if group_sv and group_sv in user.groups.all():
+#             user.groups.remove(group_sv)
 
-        # Thêm vào nhóm Giảng viên nếu chưa có
-        if group_gv not in user.groups.all():
-            user.groups.add(group_gv)
+#         # Thêm vào nhóm Giảng viên nếu chưa có
+#         if group_gv not in user.groups.all():
+#             user.groups.add(group_gv)
 
-        user.is_staff = True  # Cho phép truy cập admin nếu cần
-        user.save()
+#         user.is_staff = True  # Cho phép truy cập admin nếu cần
+#         user.save()
 
-        # Xoá bản ghi Student nếu tồn tại
-        Student.objects.filter(user=user).delete()
+#         # Xoá bản ghi Student nếu tồn tại
+#         Student.objects.filter(user=user).delete()
 
-        # Tạo bản ghi Teacher nếu chưa có
-        teacher, created = Teacher.objects.get_or_create(user=user)
-        if created:
-            teacher.teacher_code = "GV" + str(user.id).zfill(4)
-            teacher.save()
+#         # Tạo bản ghi Teacher nếu chưa có
+#         teacher, created = Teacher.objects.get_or_create(user=user)
+#         if created:
+#             teacher.teacher_code = "GV" + str(user.id).zfill(4)
+#             teacher.save()
 
-    messages.success(request, f"{queryset.count()} user(s) đã được chuyển sang Giảng viên.")
+#     messages.success(request, f"{queryset.count()} user(s) đã được chuyển sang Giảng viên.")
 
-set_as_giangvien.short_description = "Chuyển thành Giảng viên"
+# set_as_giangvien.short_description = "Chuyển thành Giảng viên"
 
-def set_as_sinhvien(modeladmin, request, queryset):
-    group_sv, _ = Group.objects.get_or_create(name='SinhVien')
-    group_gv = Group.objects.filter(name='GiangVien').first()
+# def set_as_sinhvien(modeladmin, request, queryset):
+#     group_sv, _ = Group.objects.get_or_create(name='SinhVien')
+#     group_gv = Group.objects.filter(name='GiangVien').first()
 
-    for user in queryset:
-        # Xoá khỏi nhóm Giảng viên nếu có
-        if group_gv and group_gv in user.groups.all():
-            user.groups.remove(group_gv)
+#     for user in queryset:
+#         # Xoá khỏi nhóm Giảng viên nếu có
+#         if group_gv and group_gv in user.groups.all():
+#             user.groups.remove(group_gv)
 
-        # Thêm vào nhóm Sinh viên nếu chưa có
-        if group_sv not in user.groups.all():
-            user.groups.add(group_sv)
+#         # Thêm vào nhóm Sinh viên nếu chưa có
+#         if group_sv not in user.groups.all():
+#             user.groups.add(group_sv)
 
-        user.is_staff = True  # Tuỳ chọn nếu sinh viên không cần vào admin
-        user.save()
+#         user.is_staff = True  # Tuỳ chọn nếu sinh viên không cần vào admin
+#         user.save()
 
-        # Xoá bản ghi Teacher nếu có
-        Teacher.objects.filter(user=user).delete()
+#         # Xoá bản ghi Teacher nếu có
+#         Teacher.objects.filter(user=user).delete()
 
-        # Tạo bản ghi Student nếu chưa có
-        student, created = Student.objects.get_or_create(user=user)
-        if created:
-            student.student_code = "SV" + str(user.id).zfill(4)
-            student.save()
+#         # Tạo bản ghi Student nếu chưa có
+#         student, created = Student.objects.get_or_create(user=user)
+#         if created:
+#             student.student_code = "SV" + str(user.id).zfill(4)
+#             student.save()
 
-    messages.success(request, f"{queryset.count()} user(s) đã được chuyển sang Sinh viên.")
+#     messages.success(request, f"{queryset.count()} user(s) đã được chuyển sang Sinh viên.")
 
-set_as_sinhvien.short_description = "Chuyển thành Sinh viên"
+# set_as_sinhvien.short_description = "Chuyển thành Sinh viên"
 
 
 class UserAdminForm(forms.ModelForm):
