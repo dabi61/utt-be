@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-ip%c22t(mg&b97ce)u%0@llbt)m$u0fcev12l_yb8_cfwa*drn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["api.utt-school.site"]
+ALLOWED_HOSTS = ["34.142.233.245", "api.utt-school.site"]
 
 
 # Application definition
@@ -297,3 +297,17 @@ JAZZMIN_SETTINGS = {
     "secondary_fg_color": "#FFFFFF",
     "accent_fg_color": "#FFFFFF",
 }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+SITE_ID = 1  # ID của Site bạn vừa tạo
