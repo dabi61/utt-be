@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-ip%c22t(mg&b97ce)u%0@llbt)m$u0fcev12l_yb8_cfwa*drn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["34.142.233.245", "api.utt-school.site"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -66,6 +66,14 @@ MIDDLEWARE = [
 # Cấu hình CORS
 CORS_ALLOW_ALL_ORIGINS = True  # Cho phép tất cả các nguồn
 CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookie
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Thêm URL của ứng dụng frontend nếu bạn dùng React, Vue, v.v.
+    "http://34.142.233.245",
+    "http://api.utt-school.site"  # Địa chỉ của server khi deploy
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookies và headers như Authorization
 
 ROOT_URLCONF = "app.urls"
 
@@ -163,11 +171,14 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,  # Phải khớp với SECRET_KEY của bạn
 }
 
 DJOSER = {
@@ -186,13 +197,26 @@ DJOSER = {
 
 # DRF Spectacular Settings
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'UTT School API',
+    'TITLE': 'UTT School API 1',
     'DESCRIPTION': 'API documentation for UTT School',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'REDOC_DIST': 'SIDECAR',
+    
+    # Bổ sung các dòng sau:
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    }
 }
 
 # Cấu hình Jazzmin cho giao diện Admin
@@ -311,3 +335,4 @@ LOGGING = {
     },
 }
 SITE_ID = 1  # ID của Site bạn vừa tạo
+
