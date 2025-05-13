@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from core.views import (
     ClassViewSet, ScheduleViewSet, index_view, StatisticsAPIView,
-    UserViewSet, StudentViewSet, TeacherViewSet, ClassroomViewSet, ScheduleDetailAPIView
+    UserViewSet, StudentViewSet, TeacherViewSet, ClassroomViewSet
 )
 from core.admin import student_admin_site
 
