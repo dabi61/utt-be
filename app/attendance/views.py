@@ -12,31 +12,25 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_client_ip(request):
-    """Lấy địa chỉ IP của người dùng"""
+    """Lấy địa chỉ IP của người dùng mà không sử dụng IP giả lập"""
     print(f"AttendanceViewSet: Đang lấy IP của người dùng từ request")
-    
-    # Thêm tham số fake_ip trong URL
-    fake_ip = request.GET.get('fake_ip')
-    if fake_ip:
-        print(f"AttendanceViewSet: Sử dụng IP giả lập từ URL: {fake_ip}")
-        return fake_ip
-    
+
     # Kiểm tra xem middleware FakeIPMiddleware đã được áp dụng chưa
     if hasattr(request, 'original_ip'):
         print(f"AttendanceViewSet: Sử dụng IP giả lập: {request.META.get('REMOTE_ADDR')}")
         print(f"AttendanceViewSet: IP gốc: {request.original_ip}")
         return request.META.get('REMOTE_ADDR')
-    
-    # [Test] Uncomment dòng dưới đây để luôn trả về một IP cụ thể khi test
-    # return "103.92.27.25"  # IP Việt Nam
-    
+
+    # Lấy IP thực từ header 'X-Forwarded-For' nếu có, nếu không lấy từ 'REMOTE_ADDR'
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
     else:
         ip = request.META.get('REMOTE_ADDR')
+
     print(f"AttendanceViewSet: IP của người dùng: {ip}")
     return ip
+
 
 def get_location_from_ip(ip):
     """Lấy vị trí dựa trên địa chỉ IP"""
@@ -79,27 +73,27 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             schedule = serializer.validated_data['schedule']
             if not schedule.class_name.students.filter(id=student.id).exists():
                 raise serializers.ValidationError("Bạn không phải là sinh viên trong lớp học này")
-            
+
             # Nếu đã tồn tại bản ghi điểm danh, không cho phép tạo mới
             if Attendance.objects.filter(student=student, schedule=schedule).exists():
                 raise serializers.ValidationError("Bạn đã điểm danh cho lịch học này rồi")
-            
+
             # Kiểm tra thời gian và tính toán số phút trễ
             now = timezone.now()
             is_late = False
             minutes_late = None
-            
+
             if now > schedule.start_time:
                 # Tính số phút trễ (làm tròn lên)
                 delta = now - schedule.start_time
                 minutes_late = int(delta.total_seconds() / 60)
                 is_late = minutes_late > 0
-            
+
             # Lấy thông tin vị trí từ request data
             latitude = serializer.validated_data.get('latitude')
             longitude = serializer.validated_data.get('longitude')
             device_info = serializer.validated_data.get('device_info')
-            
+
             # Nếu không có tọa độ từ client, thử lấy từ IP
             if not latitude or not longitude:
                 client_ip = get_client_ip(self.request)
@@ -108,9 +102,9 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                     latitude, longitude = location_data
                     if not device_info:
                         device_info = f"IP: {client_ip}, Vị trí: {latitude}, {longitude}"
-            
+
             serializer.save(
-                student=student, 
+                student=student,
                 is_present=True,
                 is_late=is_late,
                 minutes_late=minutes_late,
@@ -121,13 +115,13 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             )
         except Student.DoesNotExist:
             raise serializers.ValidationError("Bạn không có quyền điểm danh")
-    
+
     @action(detail=False, methods=['post'], url_path='qr-attendance')
     def qr_attendance(self, request):
         serializer = QRCodeAttendanceSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
-            
+
             # Kiểm tra nếu user có student profile
             try:
                 student = Student.objects.get(user=user)
@@ -136,36 +130,36 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                     {"error": "Bạn không có quyền điểm danh"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
+
             schedule = serializer.validated_data['schedule']
             location_message = serializer.validated_data.get('location_message')
-            
+
             # Kiểm tra xem sinh viên có thuộc lớp của schedule này không
             if not schedule.class_name.students.filter(id=student.id).exists():
                 return Response(
                     {"error": "Bạn không phải là sinh viên trong lớp học này"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
+
             # Kiểm tra thời gian và tính toán số phút trễ
             now = timezone.now()
             is_late = False
             minutes_late = None
-            
+
             if now > schedule.start_time:
                 # Tính số phút trễ (làm tròn lên)
                 delta = now - schedule.start_time
                 minutes_late = int(delta.total_seconds() / 60)
                 is_late = minutes_late > 0
-            
+
             # Lấy thông tin vị trí từ request data
             latitude = serializer.validated_data.get('latitude')
             longitude = serializer.validated_data.get('longitude')
             device_info = serializer.validated_data.get('device_info', '')
-            
+
             # Thông tin về nguồn gốc vị trí
             location_source = "GPS thiết bị"
-            
+
             # Nếu không có tọa độ từ client, thử lấy từ IP
             if not latitude or not longitude:
                 client_ip = get_client_ip(request)
@@ -173,14 +167,14 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 if location_data and len(location_data) == 2:
                     latitude, longitude = location_data
                     location_source = "IP"
-                    
+
                     # Thêm thông tin vị trí vào device_info
                     location_info = f"IP: {client_ip}, Vị trí: {latitude}, {longitude}"
                     if device_info:
                         device_info = f"{device_info}, {location_info}"
                     else:
                         device_info = location_info
-            
+
             # Kiểm tra xem đã điểm danh cho lịch học này chưa
             attendance, created = Attendance.objects.get_or_create(
                 student=student,
@@ -195,7 +189,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                     'is_in_location': True
                 }
             )
-            
+
             if not created:
                 # Nếu bản ghi đã tồn tại, cập nhật trạng thái
                 attendance.is_present = True
@@ -209,14 +203,14 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 message = "Bạn đã cập nhật điểm danh thành công"
             else:
                 message = "Bạn đã điểm danh thành công"
-            
+
             attendance_status = "Có mặt"
             if is_late:
                 attendance_status = f"Trễ {minutes_late} phút"
-            
+
             # Format thời gian theo múi giờ Việt Nam
             timestamp_vn = timezone.localtime(attendance.timestamp).strftime('%H:%M:%S %d/%m/%Y')
-            
+
             return Response({
                 "status": "success",
                 "message": message,
@@ -237,5 +231,5 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                     "location_message": location_message
                 }
             })
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

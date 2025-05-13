@@ -157,10 +157,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'start_time', 'end_time', 'is_active']
 
-class ScheduleDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Schedule
-        exclude = ['qr_code', 'qr_code_data']  # loại bỏ những field không muốn hiển thị
 
 class AttendanceSerializer(serializers.ModelSerializer):
     """Serializer cho Attendance"""

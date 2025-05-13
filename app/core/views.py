@@ -129,19 +129,6 @@ class ScheduleViewSet(viewsets.ModelViewSet):
 
         return Response({"status": "success", "message": "Điểm danh thành công."})
 
-
-class ScheduleDetailAPIView(APIView):
-    def get(self, request, schedule_id):
-        try:
-            schedule = Schedule.objects.get(id=schedule_id)
-        except Schedule.DoesNotExist:
-            return Response({"detail": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Dùng serializer để chuyển object thành JSON
-        serializer = ScheduleSerializer(schedule)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    
 def index_view(request):
     """
     Hiển thị trang chủ với các tùy chọn đăng nhập và thông tin người dùng (nếu đã đăng nhập)
