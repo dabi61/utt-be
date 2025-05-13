@@ -7,16 +7,16 @@ from django.utils import timezone
 class UserSerializer(serializers.ModelSerializer):
     """Serializer cho model User với đầy đủ thông tin cá nhân"""
     avatar_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'name', 'phone_number', 'address', 
+            'id', 'email', 'name', 'phone_number', 'address',
             'date_of_birth', 'gender', 'avatar', 'avatar_url', 'bio',
             'is_active', 'date_joined'
         ]
         read_only_fields = ['id', 'date_joined']
-        
+
     def get_avatar_url(self, obj):
         if obj.avatar and hasattr(obj.avatar, 'url'):
             request = self.context.get('request')
@@ -29,56 +29,56 @@ class UserCreateSerializer(serializers.ModelSerializer):
     """Serializer cho việc tạo User mới"""
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
     confirm_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
-    
+
     class Meta:
         model = User
         fields = [
-            'email', 'name', 'password', 'confirm_password', 
+            'email', 'name', 'password', 'confirm_password',
             'phone_number', 'address', 'date_of_birth', 'gender'
         ]
-        
+
     def validate(self, attrs):
         # Xác thực mật khẩu
         if attrs.get('password') != attrs.get('confirm_password'):
             raise serializers.ValidationError({'confirm_password': 'Mật khẩu không khớp'})
-        
+
         try:
             validate_password(attrs.get('password'))
         except ValidationError as e:
             raise serializers.ValidationError({'password': e.messages})
-            
+
         return attrs
-        
+
     def create(self, validated_data):
         # Loại bỏ confirm_password khỏi dữ liệu
         validated_data.pop('confirm_password', None)
-        
+
         # Tạo user mới
         user = User.objects.create_user(
             email=validated_data.pop('email'),
             password=validated_data.pop('password'),
             **validated_data
         )
-        
+
         return user
 
 class ChangePasswordSerializer(serializers.Serializer):
     """Serializer cho việc thay đổi mật khẩu"""
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
-    
+
     def validate_new_password(self, value):
         try:
             validate_password(value)
         except ValidationError as e:
             raise serializers.ValidationError(e.messages)
         return value
-        
-        
+
+
 class StudentSerializer(serializers.ModelSerializer):
     """Serializer cho Student"""
     user = UserSerializer(read_only=True)
-    
+
     class Meta:
         model = Student
         fields = ['id', 'user', 'student_code']
@@ -88,7 +88,7 @@ class StudentSerializer(serializers.ModelSerializer):
 class TeacherSerializer(serializers.ModelSerializer):
     """Serializer cho Teacher"""
     user = UserSerializer(read_only=True)
-    
+
     class Meta:
         model = Teacher
         fields = ['id', 'user', 'teacher_code']
@@ -99,15 +99,15 @@ class ClassSerializer(serializers.ModelSerializer):
     """Serializer cho Class"""
     student_count = serializers.SerializerMethodField()
     teacher_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Class
         fields = ['id', 'class_code', 'class_name', 'student_count', 'teacher_count']
         read_only_fields = ['id', 'class_code']
-        
+
     def get_student_count(self, obj):
         return obj.students.count()
-        
+
     def get_teacher_count(self, obj):
         return obj.teachers.count()
 
@@ -131,11 +131,11 @@ class ObjectSerializer(serializers.ModelSerializer):
 class WeekdaySerializer(serializers.ModelSerializer):
     """Serializer cho Weekday"""
     day_display = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Weekday
         fields = ['id', 'day', 'day_display']
-        
+
     def get_day_display(self, obj):
         return obj.__str__()
 
@@ -147,22 +147,26 @@ class ScheduleSerializer(serializers.ModelSerializer):
     room_name = serializers.CharField(source='room.class_name', read_only=True)
     class_name = serializers.CharField(source='class_name.class_name', read_only=True)
     weekdays = WeekdaySerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Schedule
         fields = [
             'id', 'teacher', 'teacher_name', 'course_name', 'room_name', 'class_name',
             'lesson_start', 'lesson_count', 'start_time', 'end_time',
-            'weekdays', 'start_date', 'end_date', 'is_active'
+            'weekdays', 'start_date', 'end_date'
         ]
         read_only_fields = ['id', 'start_time', 'end_time', 'is_active']
 
+class ScheduleDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        exclude = ['qr_code', 'qr_code_data']  # loại bỏ những field không muốn hiển thị
 
 class AttendanceSerializer(serializers.ModelSerializer):
     """Serializer cho Attendance"""
     student_name = serializers.CharField(source='student.user.name', read_only=True)
     schedule_info = ScheduleSerializer(source='schedule', read_only=True)
-    
+
     class Meta:
         model = Attendance
         fields = [
@@ -182,7 +186,7 @@ class StudentScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
         fields = [
-            'id', 'teacher_name', 'course_name', 'room_name', 
+            'id', 'teacher_name', 'course_name', 'room_name',
             'class_name', 'start_time', 'end_time', 'is_present'
         ]
 
@@ -206,8 +210,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
         fields = [
-            'id', 'teacher_name', 'course_name', 'room_name', 
-            'class_name', 'start_time', 'end_time'
+            'id', 'teacher', 'course_name', 'room', 'class_name',
+            'lesson_start', 'lesson_count', 'start_time', 'end_time',
+            'weekdays', 'start_date', 'end_date', 'is_active',
+            'teacher_name', 'course_name', 'room_name', 'class_name',
         ]
 
     def validate(self, attrs):
@@ -217,7 +223,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
         if start_time and end_time:
             if start_time >= end_time:
                 raise serializers.ValidationError("Thời gian kết thúc phải sau thời gian bắt đầu.")
-            
+
             if start_time < timezone.now():
                 raise serializers.ValidationError("Không thể tạo lịch học trong quá khứ.")
 
@@ -235,7 +241,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         schedule = super().create(validated_data)
-        
+
         # Tạo bản ghi điểm danh cho tất cả sinh viên trong lớp
         students = schedule.class_name.students.all()
         for student in students:
@@ -244,30 +250,30 @@ class ScheduleSerializer(serializers.ModelSerializer):
                 schedule=schedule,
                 is_present=False
             )
-            
-        return schedule 
+
+        return schedule
 
 class AvatarSerializer(serializers.Serializer):
     """Serializer cho việc tải lên avatar"""
     avatar = serializers.ImageField(required=True)
-    
+
     def validate_avatar(self, value):
         # Kích thước tối đa (2MB)
         max_size = 2 * 1024 * 1024  # 2MB in bytes
-        
+
         if value.size > max_size:
             raise serializers.ValidationError(
                 f"Kích thước file không được vượt quá 2MB. File hiện tại: {value.size / 1024 / 1024:.2f}MB"
             )
-        
+
         # Kiểm tra định dạng file
         import os
         ext = os.path.splitext(value.name)[1].lower()
         valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
-        
+
         if ext not in valid_extensions:
             raise serializers.ValidationError(
                 f"Chỉ hỗ trợ định dạng {', '.join(valid_extensions)}"
             )
-        
-        return value 
+
+        return value

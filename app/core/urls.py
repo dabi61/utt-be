@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from core.views import (
     ClassViewSet, ScheduleViewSet, index_view, StatisticsAPIView,
-    UserViewSet, StudentViewSet, TeacherViewSet, ClassroomViewSet
+    UserViewSet, StudentViewSet, TeacherViewSet, ClassroomViewSet, ScheduleDetailAPIView
 )
 from core.admin import student_admin_site
 
@@ -26,7 +26,7 @@ def user_info(request):
     avatar_url = None
     if user.avatar and hasattr(user.avatar, 'url'):
         avatar_url = request.build_absolute_uri(user.avatar.url)
-        
+
     data = {
         'id': user.id,
         'email': user.email,
@@ -38,7 +38,7 @@ def user_info(request):
         'avatar_url': avatar_url,
         'bio': user.bio,
     }
-    
+
     # Xác định vai trò người dùng
     if user.is_superuser:
         data['role'] = 'admin'
@@ -62,7 +62,7 @@ def user_info(request):
                 }
             except Exception:
                 data['role'] = 'user'
-    
+
     return Response(data)
 
 # URLs cho StudentAdminSite và API endpoints

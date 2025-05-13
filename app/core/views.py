@@ -2,9 +2,11 @@ from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+
+
 from .models import Schedule, Attendance, Class, Student, Teacher, User, Classroom
 from .serializers import (
-    ScheduleSerializer, StudentScheduleSerializer, UserSerializer, 
+    ScheduleSerializer, StudentScheduleSerializer, UserSerializer,
     StudentSerializer, TeacherSerializer, ClassroomSerializer,
     ChangePasswordSerializer, AvatarSerializer
 )
@@ -23,27 +25,27 @@ class ClassViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Class.objects.all()
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_serializer_class(self):
         # Sử dụng serializer mặc định của DRF
         from rest_framework import serializers
-        
+
         class ClassSerializer(serializers.ModelSerializer):
             students_count = serializers.SerializerMethodField()
             teachers_count = serializers.SerializerMethodField()
-            
+
             class Meta:
                 model = Class
                 fields = ['id', 'class_code', 'class_name', 'students_count', 'teachers_count']
-            
+
             def get_students_count(self, obj):
                 return obj.students.count()
-                
+
             def get_teachers_count(self, obj):
                 return obj.teachers.count()
-        
+
         return ClassSerializer
-    
+
     def get_queryset(self):
         """
         Lọc dữ liệu dựa trên vai trò người dùng:
@@ -52,17 +54,17 @@ class ClassViewSet(viewsets.ReadOnlyModelViewSet):
         - Admin: thấy tất cả
         """
         user = self.request.user
-        
+
         if user.is_superuser:
             return Class.objects.all()
-            
+
         # Kiểm tra nếu là sinh viên
         try:
             student = user.student
             return Class.objects.filter(students=student)
         except:
             pass
-            
+
         # Kiểm tra nếu là giáo viên
         try:
             teacher = user.teacher
@@ -75,54 +77,77 @@ class ScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+
     def get_serializer_class(self):
-        if self.action == 'student_schedule':
-            return StudentScheduleSerializer
+        if self.action in ['student_schedule', 'teacher_schedule']:
+            return ScheduleSerializer  # Có thể dùng serializer riêng nếu cần
         return ScheduleSerializer
 
     @action(detail=False, methods=['get'])
     def student_schedule(self, request):
-        # Lấy tất cả lịch học của các lớp mà sinh viên đang học
         student = request.user.student
         schedules = Schedule.objects.filter(class_name__students=student)
-        
-        # Sắp xếp theo thời gian bắt đầu
         schedules = schedules.order_by('start_time')
-        
         serializer = self.get_serializer(schedules, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def teacher_schedule(self, request):
+        try:
+            teacher = request.user.teacher
+        except:
+            return Response(
+                {"error": "Bạn không phải là giáo viên."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        schedules = Schedule.objects.filter(teacher=teacher).order_by('start_time')
+        serializer = self.get_serializer(schedules, many=True)
+        return Response(serializer.data)
+
 
     @action(detail=True, methods=['post'])
     def mark_attendance(self, request, pk=None):
         schedule = self.get_object()
         student = request.user.student
-        
-        # Kiểm tra xem sinh viên có trong lớp không
+
         if student not in schedule.class_name.students.all():
             return Response(
                 {"error": "Bạn không phải là sinh viên của lớp này."},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
-        # Cập nhật hoặc tạo bản ghi điểm danh
+
         attendance, created = Attendance.objects.get_or_create(
             student=student,
             schedule=schedule,
             defaults={'is_present': True}
         )
-        
+
         if not created:
             attendance.is_present = True
             attendance.save()
-        
+
         return Response({"status": "success", "message": "Điểm danh thành công."})
 
+
+class ScheduleDetailAPIView(APIView):
+    def get(self, request, schedule_id):
+        try:
+            schedule = Schedule.objects.get(id=schedule_id)
+        except Schedule.DoesNotExist:
+            return Response({"detail": "Schedule not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Dùng serializer để chuyển object thành JSON
+        serializer = ScheduleSerializer(schedule)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    
 def index_view(request):
     """
     Hiển thị trang chủ với các tùy chọn đăng nhập và thông tin người dùng (nếu đã đăng nhập)
     """
     context = {}
-    
+
     # Nếu người dùng đã đăng nhập, thêm thông tin vào context
     if request.user.is_authenticated:
         # Thêm thông tin cơ bản từ User model
@@ -131,7 +156,7 @@ def index_view(request):
             'email': request.user.email,
             'name': request.user.name,
         }
-        
+
         # Xác định vai trò người dùng
         if request.user.is_superuser:
             user_data['role'] = 'admin'
@@ -155,9 +180,9 @@ def index_view(request):
                     }
                 except Exception:
                     user_data['role'] = 'user'
-        
+
         context['user_data'] = user_data
-    
+
     return render(request, 'index.html', context)
 
 class StatisticsAPIView(APIView):
@@ -165,38 +190,38 @@ class StatisticsAPIView(APIView):
     API thống kê dữ liệu tùy theo vai trò người dùng
     """
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
         user = request.user
-        
+
         # Phân loại người dùng để trả về thống kê phù hợp
         if user.is_superuser:
             return self.get_admin_statistics()
-        
+
         try:
             # Thống kê dành cho sinh viên
             student = user.student
             return self.get_student_statistics(student)
         except:
             pass
-            
+
         try:
             # Thống kê dành cho giáo viên
             teacher = user.teacher
             return self.get_teacher_statistics(teacher)
         except:
             return Response({"error": "Không thể xác định vai trò của bạn"}, status=status.HTTP_403_FORBIDDEN)
-    
+
     def get_admin_statistics(self):
         """Thống kê dành cho quản trị viên"""
         today = timezone.now().date()
-        
+
         # Thống kê tổng quan
         total_students = Student.objects.count()
         total_teachers = Teacher.objects.count()
         total_classes = Class.objects.count()
         active_schedules = Schedule.objects.filter(is_active=True).count()
-        
+
         # Thống kê điểm danh trong 30 ngày gần đây
         thirty_days_ago = today - timedelta(days=30)
         recent_attendance = Attendance.objects.filter(timestamp__date__gte=thirty_days_ago)
@@ -204,12 +229,12 @@ class StatisticsAPIView(APIView):
         present_count = recent_attendance.filter(is_present=True).count()
         absent_count = total_attendance - present_count
         late_count = recent_attendance.filter(is_late=True).count()
-        
+
         # Tỷ lệ điểm danh
         attendance_rate = 0
         if total_attendance > 0:
             attendance_rate = (present_count / total_attendance) * 100
-        
+
         # Biểu đồ điểm danh theo ngày
         attendance_by_day = {}
         for i in range(30):
@@ -221,7 +246,7 @@ class StatisticsAPIView(APIView):
                 'absent': day_attendance.filter(is_present=False).count(),
                 'late': day_attendance.filter(is_late=True).count()
             }
-        
+
         return Response({
             'role': 'admin',
             'overview': {
@@ -239,26 +264,26 @@ class StatisticsAPIView(APIView):
             },
             'attendance_by_day': attendance_by_day,
         })
-    
+
     def get_teacher_statistics(self, teacher):
         """Thống kê dành cho giáo viên"""
         today = timezone.now().date()
-        
+
         # Lấy danh sách lớp giáo viên đang dạy
         classes = Class.objects.filter(teachers=teacher)
-        
+
         # Lấy danh sách lịch dạy
         schedules = Schedule.objects.filter(teacher=teacher)
         active_schedules = schedules.filter(is_active=True)
-        
+
         # Thống kê học sinh và tỷ lệ điểm danh
         students_count = 0
         classes_data = []
-        
+
         for class_obj in classes:
             class_students = class_obj.students.count()
             students_count += class_students
-            
+
             # Tính tỷ lệ điểm danh cho từng lớp
             class_schedules = schedules.filter(class_name=class_obj)
             class_attendance = Attendance.objects.filter(schedule__in=class_schedules)
@@ -267,7 +292,7 @@ class StatisticsAPIView(APIView):
             attendance_rate = 0
             if total_class_attendance > 0:
                 attendance_rate = (present_count / total_class_attendance) * 100
-            
+
             classes_data.append({
                 'id': class_obj.id,
                 'name': class_obj.class_name,
@@ -275,14 +300,14 @@ class StatisticsAPIView(APIView):
                 'students_count': class_students,
                 'attendance_rate': attendance_rate
             })
-        
+
         # Thống kê điểm danh 30 ngày gần đây
         thirty_days_ago = today - timedelta(days=30)
         recent_attendance = Attendance.objects.filter(
             schedule__in=schedules,
             timestamp__date__gte=thirty_days_ago
         )
-        
+
         # Tỷ lệ điểm danh theo ngày
         attendance_by_day = {}
         for i in range(30):
@@ -290,26 +315,26 @@ class StatisticsAPIView(APIView):
             day_attendance = recent_attendance.filter(timestamp__date=day)
             total = day_attendance.count()
             present = day_attendance.filter(is_present=True).count()
-            
+
             if total > 0:
                 rate = (present / total) * 100
             else:
                 rate = 0
-                
+
             attendance_by_day[day.strftime('%Y-%m-%d')] = {
                 'total': total,
                 'present': present,
                 'absent': total - present,
                 'rate': rate
             }
-        
+
         # Lịch dạy sắp tới trong 7 ngày
         next_week = today + timedelta(days=7)
         upcoming_schedules = active_schedules.filter(
             start_date__gte=today,
             start_date__lte=next_week
         ).order_by('start_date')
-        
+
         upcoming_data = []
         for schedule in upcoming_schedules:
             upcoming_data.append({
@@ -321,7 +346,7 @@ class StatisticsAPIView(APIView):
                 'end_time': schedule.end_time.strftime('%H:%M') if schedule.end_time else None,
                 'room': schedule.room.class_name
             })
-        
+
         return Response({
             'role': 'teacher',
             'name': teacher.user.name,
@@ -335,56 +360,56 @@ class StatisticsAPIView(APIView):
             'attendance_by_day': attendance_by_day,
             'upcoming_schedules': upcoming_data
         })
-    
+
     def get_student_statistics(self, student):
         """Thống kê dành cho sinh viên"""
         today = timezone.now().date()
-        
+
         # Lấy các lớp học sinh đang học
         classes = Class.objects.filter(students=student)
-        
+
         # Lấy tất cả lịch học
         schedules = Schedule.objects.filter(class_name__in=classes)
         active_schedules = schedules.filter(is_active=True)
-        
+
         # Thống kê điểm danh
         all_attendance = Attendance.objects.filter(student=student)
         total_attendance = all_attendance.count()
         present_count = all_attendance.filter(is_present=True).count()
         absent_count = total_attendance - present_count
         late_count = all_attendance.filter(is_late=True).count()
-        
+
         # Tỷ lệ điểm danh
         attendance_rate = 0
         if total_attendance > 0:
             attendance_rate = (present_count / total_attendance) * 100
-        
+
         # Thống kê điểm danh theo môn học
         courses_attendance = {}
         for schedule in schedules:
             course_name = schedule.course_name.object_name
-            
+
             if course_name not in courses_attendance:
                 courses_attendance[course_name] = {
-                    'total': 0, 
-                    'present': 0, 
-                    'absent': 0, 
+                    'total': 0,
+                    'present': 0,
+                    'absent': 0,
                     'late': 0
                 }
-            
+
             attendance = all_attendance.filter(schedule=schedule)
             courses_attendance[course_name]['total'] += attendance.count()
             courses_attendance[course_name]['present'] += attendance.filter(is_present=True).count()
             courses_attendance[course_name]['absent'] += attendance.filter(is_present=False).count()
             courses_attendance[course_name]['late'] += attendance.filter(is_late=True).count()
-        
+
         # Lịch học sắp tới trong 7 ngày
         next_week = today + timedelta(days=7)
         upcoming_schedules = active_schedules.filter(
             start_date__gte=today,
             start_date__lte=next_week
         ).order_by('start_date')
-        
+
         upcoming_data = []
         for schedule in upcoming_schedules:
             # Kiểm tra xem đã điểm danh chưa
@@ -393,7 +418,7 @@ class StatisticsAPIView(APIView):
                 schedule=schedule,
                 is_present=True
             ).exists()
-            
+
             upcoming_data.append({
                 'id': schedule.id,
                 'course': schedule.course_name.object_name,
@@ -404,7 +429,7 @@ class StatisticsAPIView(APIView):
                 'teacher': schedule.teacher.user.name,
                 'has_attendance': has_attendance
             })
-        
+
         return Response({
             'role': 'student',
             'name': student.user.name,
@@ -434,7 +459,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]  # Để xử lý multipart/form-data
-    
+
     def get_queryset(self):
         """
         Người dùng chỉ có thể xem thông tin của chính mình
@@ -444,13 +469,13 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         if user.is_superuser:
             return User.objects.all()
         return User.objects.filter(id=user.id)
-    
+
     @action(detail=False, methods=['get'])
     def me(self, request):
         """Trả về thông tin chi tiết của người dùng hiện tại"""
         serializer = self.get_serializer(request.user, context={'request': request})
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['put', 'patch'], url_path='update-profile')
     def update_profile(self, request):
         """Cập nhật thông tin cá nhân của người dùng"""
@@ -460,50 +485,50 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(detail=False, methods=['post'], url_path='upload-avatar')
     def upload_avatar(self, request):
         """Tải lên và cập nhật avatar cho người dùng"""
         user = request.user
-        
+
         # Sử dụng serializer để xác thực dữ liệu đầu vào
         serializer = AvatarSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Xóa avatar cũ nếu có
         if user.avatar:
             user.avatar.delete(save=False)
-        
+
         # Cập nhật avatar mới
         user.avatar = serializer.validated_data['avatar']
         user.save()
-        
+
         # Trả về thông tin người dùng đã cập nhật
         response_serializer = self.get_serializer(user, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=['delete'], url_path='remove-avatar')
     def remove_avatar(self, request):
         """Xóa avatar của người dùng"""
         user = request.user
-        
+
         if not user.avatar:
             return Response(
                 {"detail": "Người dùng không có avatar."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # Xóa avatar
         user.avatar.delete()
         user.avatar = None
         user.save()
-        
+
         return Response(
             {"detail": "Avatar đã được xóa thành công."},
             status=status.HTTP_200_OK
         )
-    
+
     @action(detail=False, methods=['post'], url_path='change-password')
     def change_password(self, request):
         """Thay đổi mật khẩu"""
@@ -512,17 +537,17 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         if serializer.is_valid():
             # Kiểm tra mật khẩu cũ
             if not user.check_password(serializer.validated_data['old_password']):
-                return Response({"old_password": ["Mật khẩu hiện tại không đúng."]}, 
+                return Response({"old_password": ["Mật khẩu hiện tại không đúng."]},
                                 status=status.HTTP_400_BAD_REQUEST)
-            
+
             # Đổi mật khẩu
             user.set_password(serializer.validated_data['new_password'])
             user.save()
-            return Response({"detail": "Mật khẩu đã được thay đổi thành công."}, 
+            return Response({"detail": "Mật khẩu đã được thay đổi thành công."},
                            status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Thêm StudentViewSet 
+# Thêm StudentViewSet
 class StudentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint cho xem thông tin sinh viên
@@ -530,7 +555,7 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         """
         Sinh viên chỉ có thể xem thông tin của chính mình
@@ -538,10 +563,10 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
         Admin có thể xem tất cả
         """
         user = self.request.user
-        
+
         if user.is_superuser:
             return Student.objects.all()
-        
+
         # Nếu là giáo viên, xem thông tin sinh viên trong lớp dạy
         try:
             teacher = user.teacher
@@ -552,7 +577,7 @@ class StudentViewSet(viewsets.ReadOnlyModelViewSet):
             return Student.objects.filter(id__in=student_ids)
         except:
             pass
-        
+
         # Nếu là sinh viên, chỉ xem thông tin của mình
         try:
             student = user.student
@@ -568,7 +593,7 @@ class TeacherViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         """
         Giáo viên chỉ có thể xem thông tin của chính mình
@@ -576,17 +601,17 @@ class TeacherViewSet(viewsets.ReadOnlyModelViewSet):
         Admin có thể xem tất cả
         """
         user = self.request.user
-        
+
         if user.is_superuser:
             return Teacher.objects.all()
-        
+
         # Nếu là giáo viên, xem thông tin của mình
         try:
             teacher = user.teacher
             return Teacher.objects.filter(id=teacher.id)
         except:
             pass
-        
+
         # Nếu là sinh viên, xem thông tin giáo viên dạy mình
         try:
             student = user.student
@@ -605,4 +630,4 @@ class ClassroomViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Classroom.objects.all()
     serializer_class = ClassroomSerializer
-    permission_classes = [permissions.IsAuthenticated] 
+    permission_classes = [permissions.IsAuthenticated]
